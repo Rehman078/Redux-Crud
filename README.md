@@ -20,13 +20,6 @@ A simple book management application built with React and Redux Toolkit to pract
 - Axios
 - Vite
 
-## Getting Started
-
-```bash
-npm install
-npm run dev
-```
-
 ## Author
 
 **Rehman Naveed** - Full Stack Web Developer - [LinkedIn](https://linkedin.com/in/rehmannaveed)
