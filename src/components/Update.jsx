@@ -1,96 +1,190 @@
-import React, { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useSelector, useDispatch } from 'react-redux';
 import { updateBooks } from '../redux/bookSlice';
+import { useToast } from './Toast';
+import '../App.css';
 
 function Update() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [updatedBook, setUpdateBook] = useState({ name: '', author: '', price: '', stock: '' });
+  const toast = useToast();
   const { id } = useParams();
   const { loading, books } = useSelector((state) => state.books);
 
+  const [book, setBook] = useState({
+    name: '',
+    author: '',
+    price: '',
+    stock: '',
+  });
+  const [errors, setErrors] = useState({});
+  const [notFound, setNotFound] = useState(false);
+
   useEffect(() => {
     if (id && books.length > 0) {
-      const singleBook = books.find((book) => book._id === id);
-      if (singleBook) setUpdateBook(singleBook);
+      const singleBook = books.find((b) => b._id === id);
+      if (singleBook) {
+        setBook(singleBook);
+      } else {
+        setNotFound(true);
+      }
     }
   }, [id, books]);
 
-  const handleChange = (e) => {
-    setUpdateBook({ ...updatedBook, [e.target.name]: e.target.value });
+  const validateForm = () => {
+    const newErrors = {};
+
+    if (!book.name?.trim()) {
+      newErrors.name = 'Book name is required';
+    } else if (book.name.trim().length < 2) {
+      newErrors.name = 'Book name must be at least 2 characters';
+    }
+
+    if (!book.author?.trim()) {
+      newErrors.author = 'Author name is required';
+    } else if (book.author.trim().length < 2) {
+      newErrors.author = 'Author name must be at least 2 characters';
+    }
+
+    if (!book.price && book.price !== 0) {
+      newErrors.price = 'Price is required';
+    } else if (parseFloat(book.price) <= 0) {
+      newErrors.price = 'Price must be greater than 0';
+    }
+
+    if (!book.stock && book.stock !== 0) {
+      newErrors.stock = 'Stock is required';
+    } else if (parseInt(book.stock) < 0) {
+      newErrors.stock = 'Stock cannot be negative';
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
-  const handleUpdate = (e) => {
-    e.preventDefault(); // Prevent form submission
-    dispatch(updateBooks(updatedBook));
-    navigate('/');
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setBook({ ...book, [name]: value });
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
   };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!validateForm()) {
+      return;
+    }
+
+    try {
+      await dispatch(updateBooks(book)).unwrap();
+      toast.success('Book Updated', `"${book.name}" has been updated`);
+      navigate('/');
+    } catch (error) {
+      toast.error('Update Failed', error || 'Could not update the book');
+    }
+  };
+
+  if (notFound) {
+    return (
+      <>
+        <h1 className="page-title">Book Not Found</h1>
+        <div className="card-container">
+          <div className="empty-state">
+            <div className="empty-state-icon">🔍</div>
+            <h3>Book not found</h3>
+            <p>The book you're looking for doesn't exist or has been deleted.</p>
+            <Link to="/" className="btn btn-primary" style={{ marginTop: '20px' }}>
+              Back to Library
+            </Link>
+          </div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <>
-      <h3 className="text-center mt-5">Edit Book</h3>
-      <div className="card card-margin px-5 py-4">
-        <form onSubmit={handleUpdate}>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Book Name</label>
+      <h1 className="page-title">Edit Book</h1>
+
+      <div className="card-container">
+        <Link to="/" className="back-link">
+          ← Back to Library
+        </Link>
+
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <label className="form-label">Book Name</label>
             <input
               type="text"
               name="name"
-              value={updatedBook?.name || ''}
+              value={book.name || ''}
               onChange={handleChange}
-              className="form-control"
-              required
+              className={`form-control ${errors.name ? 'is-invalid' : ''}`}
+              placeholder="Enter book title"
             />
+            {errors.name && <span className="invalid-feedback">{errors.name}</span>}
           </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Author Name</label>
+
+          <div className="form-group">
+            <label className="form-label">Author Name</label>
             <input
               type="text"
               name="author"
-              value={updatedBook?.author || ''}
+              value={book.author || ''}
               onChange={handleChange}
-              className="form-control"
-              required
+              className={`form-control ${errors.author ? 'is-invalid' : ''}`}
+              placeholder="Enter author name"
             />
+            {errors.author && <span className="invalid-feedback">{errors.author}</span>}
           </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Price</label>
-            <input
-              type="number"
-              name="price"
-              value={updatedBook?.price || ''}
-              onChange={handleChange}
-              className="form-control"
-              required
-            />
+
+          <div className="form-row">
+            <div className="form-group">
+              <label className="form-label">Price ($)</label>
+              <input
+                type="number"
+                name="price"
+                value={book.price || ''}
+                onChange={handleChange}
+                className={`form-control ${errors.price ? 'is-invalid' : ''}`}
+                placeholder="0.00"
+                min="0"
+                step="0.01"
+              />
+              {errors.price && <span className="invalid-feedback">{errors.price}</span>}
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Stock Quantity</label>
+              <input
+                type="number"
+                name="stock"
+                value={book.stock || ''}
+                onChange={handleChange}
+                className={`form-control ${errors.stock ? 'is-invalid' : ''}`}
+                placeholder="0"
+                min="0"
+              />
+              {errors.stock && <span className="invalid-feedback">{errors.stock}</span>}
+            </div>
           </div>
-          <div className="mb-3">
-            <label className="form-label fw-bold">Stock</label>
-            <input
-              type="number"
-              name="stock"
-              value={updatedBook?.stock || ''}
-              onChange={handleChange}
-              className="form-control"
-              required
-            />
-          </div>
-          <div className="d-flex justify-content-center">
-          <button type="submit" className="btn btn-sm btn-primary" 
-           disabled={loading}>
-            {loading ? (
+
+          <div className="form-actions">
+            <Link to="/" className="btn btn-secondary">
+              Cancel
+            </Link>
+            <button type="submit" className="btn btn-primary" disabled={loading}>
+              {loading ? (
                 <>
-                <span 
-                    className="spinner-border spinner-border-sm me-2" 
-                    role="status" 
-                    aria-hidden="true"
-                ></span>
-                Updating...
+                  <span className="loading-spinner" style={{ width: 16, height: 16 }}></span>
+                  Updating...
                 </>
-            ) : (
-                "Update Book"
-            )}
+              ) : (
+                'Update Book'
+              )}
             </button>
           </div>
         </form>

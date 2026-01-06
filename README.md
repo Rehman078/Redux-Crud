@@ -1,8 +1,32 @@
-# React + Vite
+# Book Library - Redux CRUD
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This is my first project when I was learning React.
 
-Currently, two official plugins are available:
+A simple book management application built with React and Redux Toolkit to practice CRUD operations.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react/README.md) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Features
+
+- Add, edit, and delete books
+- Search books by name or author
+- Form validation
+- Toast notifications
+- Modern dark theme UI
+
+## Tech Stack (Learning)
+
+- React 18
+- Redux Toolkit
+- React Router
+- Axios
+- Vite
+
+## Getting Started
+
+```bash
+npm install
+npm run dev
+```
+
+## Author
+
+**Rehman Naveed** - Full Stack Web Developer - [LinkedIn](https://linkedin.com/in/rehmannaveed)

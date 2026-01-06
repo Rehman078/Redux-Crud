@@ -105,8 +105,9 @@ const bookSlice = createSlice({
         state.loading = true;
       })
       .addCase(updateBooks.fulfilled, (state, action) => {
-        const updatedBook = action.payload.data; // Assuming response has `data` with the updated book
-        state.books = state.books.map((book) => 
+        state.loading = false;
+        const updatedBook = action.payload.data;
+        state.books = state.books.map((book) =>
           book._id === updatedBook._id ? updatedBook : book
         );
       })      
